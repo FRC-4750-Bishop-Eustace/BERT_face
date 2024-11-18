@@ -10,6 +10,7 @@ import displayio
 import framebufferio
 import adafruit_mpu6050
 
+
 # connect to motion sensor
 i2c = board.I2C()
 mpu = adafruit_mpu6050.MPU6050(i2c)
@@ -111,6 +112,29 @@ def advance_frame():
         current_frame = 0
         current_loop = current_loop + 1
     sprite_group[0][0] = current_frame
+    
+# INITAL POSITION OF MOTION SENSOR 
+movement_test = False
+movement_print = True
+forward_axis = "Z"
+rotation_axis = "X"
+
+if forward_axis == "X":
+    bot_acceleration_initial = mpu.acceleration[0]
+elif forward_axis == "Y":
+    bot_acceleration_initial = mpu.acceleration[1]
+else:
+    bot_acceleration_initial = mpu.acceleration[2]
+
+if rotation_axis == "X":
+    bot_rotation_initial = mpu.gyro[0]
+elif rotation_axis == "Y":
+    bot_rotation_initial = mpu.gyro[1]
+else:
+    bot_rotation_initial = mpu.gyro[2]
+
+run_threshold = 4
+dizzy_threshold = 2
 
 # LOADING IMAGES
 '''
@@ -148,7 +172,40 @@ def load_tipsy():
 advance_image()
 
 while True:
-    play_walking()
+    
+    if forward_axis == "X":
+        bot_acceleration_now = mpu.acceleration[0]
+    elif forward_axis == "Y":
+        bot_acceleration_now = mpu.acceleration[1]
+    else:
+        bot_acceleration_now = mpu.acceleration[2]
+
+    bot_acceleration = bot_acceleration_now - bot_acceleration_initial
+
+    if rotation_axis == "X":
+        bot_rotation_now = mpu.gyro[0]
+    elif rotation_axis == "Y":
+        bot_rotation_now = mpu.gyro[1]
+    else:
+        bot_rotation_now = mpu.gyro[2]
+
+    bot_rotation = bot_rotation_now - bot_rotation_initial
+
+    ## Use for IMU testing for movement sensor functions update movement_test
+    if movement_test is True:
+        print("Acceleration: X:%.2f, Y: %.2f, Z: %.2f m/s^2" % (mpu.acceleration))
+        print("Gyro X:%.2f, Y: %.2f, Z: %.2f rad/s" % (mpu.gyro))
+        print("Temperature: %.2f C" % mpu.temperature)
+        print("")
+    if movement_print is True:
+        print("Bot Acceleration: %.2f" % (bot_acceleration))
+        print("Bot Rotation: %.2f" % (bot_rotation))
+        print("")
+    #time.sleep(1)
+    if bot_acceleration > 10 or bot_acceleration < -10:
+        play_thankyou()
+    else:
+        play_walking()
     '''
     if auto_advance and current_loop >= AUTO_ADVANCE_LOOPS:
         advance_image()
